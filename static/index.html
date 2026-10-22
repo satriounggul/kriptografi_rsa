@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aplikasi Kriptografi Multi-Prime RSA</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-content">
+      <div class="header-title-box">
+        <h1>Multi-Prime RSA</h1>
+        <p class="subtitle">Pembangkitan Kunci, Enkripsi, dan Dekripsi (Standar & CRT)</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigasi Tab -->
+  <nav class="nav-tabs" aria-label="Menu Fitur">
+    <button class="tab-btn active" data-tab="tab-keygen">1. Pembangkitan Kunci</button>
+    <button class="tab-btn" data-tab="tab-crypto">2. Enkripsi & Dekripsi</button>
+  </nav>
+
+  <main class="container">
+
+    <!-- TAB 1: PEMBANGKITAN KUNCI -->
+    <section id="tab-keygen" class="tab-panel active">
+      <div class="card">
+        <div class="card-header">
+          <h2>Pembangkitan Kunci Multi-Prime RSA</h2>
+          <p class="card-desc">Bangkitkan modulus n = p₁ × p₂ × ... × pₖ (k ≥ 2), eksponen e, invers d, serta parameter CRT.</p>
+        </div>
+        <div class="card-body">
+          <form id="form-keygen" class="grid-form">
+            <div class="form-group">
+              <label for="keygen-bits">Ukuran Modulus Total (bits):</label>
+              <select id="keygen-bits" name="bits">
+                <option value="64">64 bit (Sangat cepat)</option>
+                <option value="128">128 bit (Cepat)</option>
+                <option value="256" selected>256 bit (Standar Uji)</option>
+                <option value="512">512 bit</option>
+                <option value="1024">1024 bit</option>
+                <option value="2048">2048 bit</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="keygen-k">Jumlah Prima (k):</label>
+              <select id="keygen-k" name="k">
+                <option value="2">k = 2 (RSA Standar)</option>
+                <option value="3" selected>k = 3 (Multi-Prime)</option>
+                <option value="4">k = 4 (Multi-Prime)</option>
+                <option value="5">k = 5 (Multi-Prime)</option>
+              </select>
+            </div>
+            <div class="form-action">
+              <button type="submit" id="btn-generate-keys" class="btn btn-primary">Bangkitkan Kunci Baru</button>
+            </div>
+          </form>
+
+          <div id="keygen-status" class="status-msg hidden"></div>
+
+          <!-- Hasil Keygen -->
+          <div id="keygen-results" class="results-container hidden">
+            <div class="key-display-grid">
+              <div class="key-box">
+                <div class="key-box-title">
+                  <span>Kunci Publik (Public Key)</span>
+                  <button class="btn btn-sm btn-outline copy-btn" data-target="pub-data">Salin</button>
+                </div>
+                <div class="key-content">
+                  <div class="param-row"><span class="param-label">Modulus (n):</span> <code id="pub-n" class="param-value code-block">-</code></div>
+                  <div class="param-row"><span class="param-label">Eksponen Publik (e):</span> <code id="pub-e" class="param-value">-</code></div>
+                  <div class="param-row"><span class="param-label">Panjang Bit:</span> <span id="pub-bits">-</span></div>
+                  <div class="param-row"><span class="param-label">Jumlah Prima (k):</span> <span id="pub-k">-</span></div>
+                </div>
+              </div>
+
+              <div class="key-box">
+                <div class="key-box-title">
+                  <span>Kunci Privat (Private Key)</span>
+                  <button class="btn btn-sm btn-outline copy-btn" data-target="priv-data">Salin</button>
+                </div>
+                <div class="key-content">
+                  <div class="param-row"><span class="param-label">Eksponen Dekripsi Standar (d):</span> <code id="priv-d" class="param-value code-block">-</code></div>
+                  <div class="param-row"><span class="param-label">Daftar Bilangan Prima (pᵢ):</span> <div id="priv-primes" class="prime-chips"></div></div>
+                  <div class="param-row"><span class="param-label">Eksponen CRT Fermat (dᵢ = d mod (pᵢ - 1)):</span> <div id="priv-d-primes" class="prime-chips"></div></div>
+                  <div class="param-row"><span class="param-label">Koefisien Garner (tᵢ):</span> <div id="priv-t-coeffs" class="prime-chips"></div></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="actions-footer">
+              <button id="btn-use-keys" class="btn btn-accent">Gunakan Kunci Ini untuk Enkripsi / Dekripsi &rarr;</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: ENKRIPSI & DEKRIPSI -->
+    <section id="tab-crypto" class="tab-panel">
+      <div class="grid-two-col">
+        <!-- Panel Enkripsi -->
+        <div class="card">
+          <div class="card-header">
+            <h2>Enkripsi Pesan</h2>
+            <p class="card-desc">Ubah pesan teks atau angka menjadi ciphertext (c = mᵉ mod n).</p>
+          </div>
+          <div class="card-body">
+            <form id="form-encrypt">
+              <div class="form-group">
+                <label>Format Pesan Masukan:</label>
+                <div class="radio-group">
+                  <label><input type="radio" name="enc-mode" value="text" checked> Teks String</label>
+                  <label><input type="radio" name="enc-mode" value="number"> Bilangan Bulat (0 ≤ m &lt; n)</label>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="enc-input">Pesan:</label>
+                <textarea id="enc-input" rows="4" placeholder="Ketik pesan di sini...">Halo Kriptografi Multi-Prime RSA!</textarea>
+              </div>
+              <div class="form-group">
+                <label for="enc-n">Modulus (n):</label>
+                <input type="text" id="enc-n" placeholder="Modulus n (dari tab Kunci)">
+              </div>
+              <div class="form-group">
+                <label for="enc-e">Eksponen Publik (e):</label>
+                <input type="text" id="enc-e" value="65537">
+              </div>
+              <button type="submit" id="btn-encrypt" class="btn btn-primary">Enkripsi Pesan</button>
+            </form>
+
+            <div id="enc-result" class="result-box hidden">
+              <h3>Hasil Ciphertext (c):</h3>
+              <div class="output-preview">
+                <code id="enc-output" class="code-block"></code>
+              </div>
+              <button class="btn btn-sm btn-outline copy-btn" data-target="enc-output">Salin Ciphertext</button>
+              <button id="btn-forward-cipher" class="btn btn-sm btn-secondary">Kirim ke Panel Dekripsi &rarr;</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel Dekripsi -->
+        <div class="card">
+          <div class="card-header">
+            <h2>Dekripsi Pesan</h2>
+            <p class="card-desc">Kembalikan ciphertext ke pesan asli dengan metode RSA Standar atau CRT.</p>
+          </div>
+          <div class="card-body">
+            <form id="form-decrypt">
+              <div class="form-group">
+                <label for="dec-cipher">Ciphertext Masukan:</label>
+                <textarea id="dec-cipher" rows="3" placeholder="Ciphertext angka atau blok..."></textarea>
+              </div>
+              <div class="form-group">
+                <label for="dec-method">Metode Dekripsi:</label>
+                <select id="dec-method">
+                  <option value="crt_garner" selected>CRT + Fermat Kecil (Rekombinasi Garner)</option>
+                  <option value="standard">RSA Standar (cᵈ mod n)</option>
+                  <option value="crt_gauss">CRT Rekombinasi Gauss</option>
+                </select>
+              </div>
+              <button type="submit" id="btn-decrypt" class="btn btn-primary">Jalankan Dekripsi</button>
+            </form>
+
+            <div id="dec-result" class="result-box hidden">
+              <h3>Hasil Pesan Asli (Plaintext):</h3>
+              <div class="output-preview plaintext-preview">
+                <span id="dec-output-text" class="recovered-text-display"></span>
+              </div>
+
+              <div class="metrics-row" id="dec-metrics"></div>
+
+              <!-- Langkah Antara -->
+              <div class="steps-container">
+                <div class="steps-header">
+                  <h4>Langkah Antara Perhitungan</h4>
+                  <span class="badge badge-info" id="dec-method-badge"></span>
+                </div>
+                <div id="dec-steps-content" class="steps-content"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="app-footer">
+    <p>Multi-Prime RSA Cryptography &bull; Pembangkitan Kunci &bull; Enkripsi &bull; Dekripsi</p>
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>
