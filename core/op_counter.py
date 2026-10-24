@@ -1,15 +1,9 @@
-"""
-Operation Counter for Cryptographic Operations.
-Used to measure the exact number of arithmetic operations (multiplications, modulos,
-bit shifts, additions) per decryption method, avoiding misleading timing results in Python (R-28).
-"""
+# Counter Operasi Aritmatika
 
 from typing import Dict
 
-
+# Melacak operasi aritmatika selama eksponensiasi modular dan dekripsi
 class OperationCounter:
-    """Tracks arithmetic operations during modular arithmetic and decryption."""
-
     def __init__(self) -> None:
         self.reset()
 
