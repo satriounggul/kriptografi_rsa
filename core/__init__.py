@@ -1,4 +1,4 @@
-"""Core Cryptographic Module for Multi-Prime RSA with CRT."""
+# Modul Utama Kriptografi dengan Multi-Prime RSA dan Chinese Remainder Theorem (CRT).
 
 from core.number_theory import gcd, extended_gcd, modinv, modexp, miller_rabin, generate_prime
 from core.keygen import generate_keys, validate_keys
